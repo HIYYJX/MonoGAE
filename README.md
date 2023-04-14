@@ -73,6 +73,8 @@ MonoDETR on *test* set from official [KITTI benckmark](http://www.cvlibs.net/dat
     
 </table>
 
+## Docker Image
+docker pull yanglei2024/yjx_cuda10-1-1:base
 
 ## Installation
 1. Clone this project and create a conda environment:
