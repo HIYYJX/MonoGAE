@@ -662,7 +662,7 @@ def build(cfg):
         aux_weight_dict.update({k + f'_enc': v for k, v in weight_dict.items()})
         weight_dict.update(aux_weight_dict)
 
-    losses = ['labels', 'boxes', 'cardinality',  'depths', 'dims', 'angles', 'center'   ] #'depth_map'   'denorms'  'depths',
+    losses = ['labels', 'boxes', 'cardinality',  'depths', 'dims', 'angles', 'center' , 'denorms'  ] #'depth_map'   'denorms'  'depths',
     
     criterion = SetCriterion(
         cfg['num_classes'],
