@@ -132,12 +132,12 @@ class DepthPredictor(nn.Module):
         #Features = torch.cat([src,f_denorms],dim = 1) #8,260,32,58
         depth_logits = self.depth_classifier(src) # 8 271 32 58
         #pre_denorms = ori_denorms
-        img_pre_denorms = pre_denorms[:,1:33,2:57,:] # 8,31,55,4
+        #img_pre_denorms = pre_denorms[:,1:33,2:57,:] # 8,31,55,4
         #print(img_pre_denorms.shape)torch.Size([8, 31, 55, 4])
         #print(pre_denorms.shape) #torch.Size([8, 32, 58, 4])
         P = calibs
         depthmaps = torch.zeros((8,32, 58, 1)).to(self.device)
-        GPdepthmaps = torch.zeros((8,55, 31, 1)).to(self.device)
+        #GPdepthmaps = torch.zeros((8,55, 31, 1)).to(self.device)
    
         #print(P.shape) torch.Size([8, 3, 4])
         #print(random_flip_flag.shape)torch.Size([8])

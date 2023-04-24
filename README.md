@@ -105,22 +105,36 @@ docker pull yanglei2024/yjx_cuda10-1-1:base
     ```
     mkdir logs
     ```
- 
-5. Download [KITTI](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) datasets and prepare the directory structure as:
+5. Download [DAIR-V2X-I/single-infrastructure-side](https://thudair.baai.ac.cn/roadtest) 然后根据https://github.com/AIR-THU/DAIR-V2X/blob/main/tools/dataset_converter/dair2kitti.py 将其转换为kitti格式 and prepare the directory structure as:
+
     ```
-    │MonoDETR/
+    │GroundDETR/
     ├──...
     ├──data/KITTIDataset/
     │   ├──ImageSets/
+    |   |   |──test.txt
+    |   |   |──train.txt
+    |   |   |──trainval.txt
+    |   |   |──val.txt
     │   ├──training/
+    |   |   |──calib/
+    |   |   |   |──000001.txt
+    |   |   |   |──......
+    |   |   |──denorm/
+    |   |   |──image_2/
+    |   |   |──label_2/
+    |   |   |──velodyne/
     │   ├──testing/
     ├──...
     ```
+    其中的training/denorm 是根据 get_denorm.py 获得
     You can also change the data path at "dataset/root_dir" in `configs/monodetr.yaml`.
     
 ## Get Started
 
 ### Train
+/GroundDETR/lib/models/monodetr/monodetr.py 中第665行 losses中，'denorms' 意味着地平面方程矩阵编码，'depth_map'  意味着地平面深度图编码
+ 
 You can modify the settings of models and training in `configs/monodetr.yaml` and appoint the GPU in `train.sh`:
 
     bash train.sh configs/monodetr.yaml > logs/monodetr.log
