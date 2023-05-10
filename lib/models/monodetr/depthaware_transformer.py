@@ -331,18 +331,18 @@ class DepthAwareDecoderLayer(nn.Module):
                 depth_pos_embed,
                 mask_depth):
         # depth cross attention
-        tgt2 = self.cross_attn_depth(tgt.transpose(0, 1),
-                                     depth_pos_embed,
-                                     depth_pos_embed,
-                                     key_padding_mask=mask_depth)[0].transpose(0, 1)
-        tgt = tgt + self.dropout_depth(tgt2)
-        tgt = self.norm_depth(tgt)
+        # tgt2 = self.cross_attn_depth(tgt.transpose(0, 1),
+        #                              depth_pos_embed,
+        #                              depth_pos_embed,
+        #                              key_padding_mask=mask_depth)[0].transpose(0, 1)
+        # tgt = tgt + self.dropout_depth(tgt2)
+        # tgt = self.norm_depth(tgt)
 
-        # self attention
-        q = k = self.with_pos_embed(tgt, query_pos)
-        tgt2 = self.self_attn(q.transpose(0, 1), k.transpose(0, 1), tgt.transpose(0, 1))[0].transpose(0, 1)
-        tgt = tgt + self.dropout2(tgt2)
-        tgt = self.norm2(tgt)
+        # # self attention
+        # q = k = self.with_pos_embed(tgt, query_pos)
+        # tgt2 = self.self_attn(q.transpose(0, 1), k.transpose(0, 1), tgt.transpose(0, 1))[0].transpose(0, 1)
+        # tgt = tgt + self.dropout2(tgt2)
+        # tgt = self.norm2(tgt)
 
         # visual cross attention
         tgt2 = self.cross_attn(self.with_pos_embed(tgt, query_pos),

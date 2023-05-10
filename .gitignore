@@ -1,0 +1,6 @@
+*.pth
+*.pyc
+__pycache__/
+train.log.*
+runs/monodetr/outputs/
+logs/

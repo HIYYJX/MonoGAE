@@ -122,7 +122,7 @@ class Tester(object):
         self.save_results(results)
 
     def save_results(self, results):
-        output_dir = os.path.join(self.output_dir, 'outputs', 'data23414')
+        output_dir = os.path.join(self.output_dir, 'outputs', 'data230509baseline')
         os.makedirs(output_dir, exist_ok=True)
 
         for img_id in results.keys():
@@ -144,7 +144,7 @@ class Tester(object):
             f.close()
 
     def evaluate(self):
-        results_dir = os.path.join(self.output_dir, 'outputs', 'data23414')
+        results_dir = os.path.join(self.output_dir, 'outputs', 'data230509baseline')
         assert os.path.exists(results_dir)
         result = self.dataloader.dataset.eval(results_dir=results_dir, logger=self.logger)
         return result
