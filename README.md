@@ -11,7 +11,7 @@ MonoGAE is a novel framework for Roadside Monocular 3D object detection with gro
 docker pull yanglei2024/yjx_cuda10-1-1:base
 
 ## 根据镜象建立容器：同时容器路径映射为本地目录, 并激活环境
-示例：docker run -it --gpus all --shm-size=32g -v /home/yujiaxin:/root --name cuda10-1  ea049d4cd81c bash
+示例：docker run -it --gpus all --shm-size=32g -v /home/yujiaxin:/root --name cuda10-1  181c4354cf77 bash
 
 conda activate monodetr
 
