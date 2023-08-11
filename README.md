@@ -76,39 +76,33 @@ MonoDETR on *test* set from official [KITTI benckmark](http://www.cvlibs.net/dat
 ## Docker Image
 docker pull yanglei2024/yjx_cuda10-1-1:base
 
+## 根据镜象建立容器：同时容器路径映射为本地目录
+示例：docker run -it --gpus all --shm-size=32g -v /home/yujiaxin:/root --name cuda10-1  ea049d4cd81c bash
+## 激活环境
+conda activate monodetr
 ## Installation
-1. Clone this project and create a conda environment:
+1. Clone this project
     ```
-    git clone https://github.com/ZrrSkywalker/MonoDETR.git
-    cd MonoDETR
-
-    conda create -n monodetr python=3.8
-    conda activate monodetr
+    git clone https://github.com/HIYYJX/MonoGAE.git
+    cd MonoGAE
     ```
-    
-2. Install pytorch and torchvision matching your CUDA version:
+2. compile the deformable attention:
     ```
-    conda install pytorch torchvision cudatoolkit
-    ```
-    
-3. Install requirements and compile the deformable attention:
-    ```
-    pip install -r requirements.txt
-
     cd lib/models/monodetr/ops/
     bash make.sh
     
     cd ../../../..
     ```
     
-4. Make dictionary for saving training losses:
+3. Make dictionary for saving training losses:
     ```
     mkdir logs
     ```
-5. Download [DAIR-V2X-I/single-infrastructure-side](https://thudair.baai.ac.cn/roadtest) 然后根据https://github.com/AIR-THU/DAIR-V2X/blob/main/tools/dataset_converter/dair2kitti.py 将其转换为kitti格式 and prepare the directory structure as:
+4. Download [DAIR-V2X-I/single-infrastructure-side](https://thudair.baai.ac.cn/roadtest) 然后根据https://github.com/AIR-THU/DAIR-V2X/blob/main/tools/dataset_converter/dair2kitti.py 将其转换为kitti格式 and prepare the directory structure as:
+    mkdir data
 
     ```
-    │GroundDETR/
+    │MonoGAE/
     ├──...
     ├──data/KITTIDataset/
     │   ├──ImageSets/
@@ -133,7 +127,7 @@ docker pull yanglei2024/yjx_cuda10-1-1:base
 ## Get Started
 
 ### Train
-/GroundDETR/lib/models/monodetr/monodetr.py 中第665行 losses中，'denorms' 意味着地平面方程矩阵编码，'depth_map'  意味着地平面深度图编码
+/GroundDETR/lib/models/monodetr/monodetr.py 中第665行 losses中，'denorms' 意味着地平面方程矩阵编码，'depth_map'  意味着地平面深度图编码,可通过删减'denorms'或者'depth_map' 决定地平面的编码方式
  
 You can modify the settings of models and training in `configs/monodetr.yaml` and appoint the GPU in `train.sh`:
 
