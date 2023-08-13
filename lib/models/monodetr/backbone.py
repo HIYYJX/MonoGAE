@@ -69,12 +69,12 @@ class BackboneBase(nn.Module):
     def __init__(self, backbone: nn.Module, train_backbone: bool, return_interm_layers: bool):
         super().__init__()
         for name, parameter in backbone.named_parameters():
-            if not train_backbone or 'layer2' not in name and 'layer3' not in name and 'layer4' not in name:
+            if not train_backbone or 'layer1' not in name and 'layer2' not in name and 'layer3' not in name and 'layer4' not in name:
                 parameter.requires_grad_(False)
         if return_interm_layers:
-            return_layers = {"layer2": "0", "layer3": "1", "layer4": "2"}
-            self.strides = [8, 16, 32]
-            self.num_channels = [512, 1024, 2048]
+            return_layers = {"layer1": "0","layer2": "2", "layer3": "3", "layer4": "4"}
+            self.strides = [4,8, 16, 32]
+            self.num_channels = [256,512, 1024, 2048]
         else:
             return_layers = {'layer4': "0"}
             self.strides = [32]

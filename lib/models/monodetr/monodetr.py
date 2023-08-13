@@ -155,12 +155,12 @@ class MonoDETR(nn.Module):
         """
         self.a +=1
         features, pos = self.backbone(images)
-
         srcs = []
         masks = []
         for l, feat in enumerate(features):
             src, mask = feat.decompose()
             srcs.append(self.input_proj[l](src))
+            # print(srcs[-1].shape)
             masks.append(mask)
             assert mask is not None
 
@@ -169,6 +169,7 @@ class MonoDETR(nn.Module):
             for l in range(_len_srcs, self.num_feature_levels):
                 if l == _len_srcs:
                     src = self.input_proj[l](features[-1].tensors)
+                    # print(src.shape)
                 else:
                     src = self.input_proj[l](srcs[-1])
                 m = torch.zeros(src.shape[0], src.shape[2], src.shape[3]).to(torch.bool).to(src.device)
@@ -183,7 +184,7 @@ class MonoDETR(nn.Module):
         if not self.two_stage:
             query_embeds = self.query_embed.weight
 
-        pred_depth_map_logits, depth_pos_embed, denorms,weighted_depth = self.depth_predictor(srcs, masks[1], pos[1],ori_denorms,calibs,random_flip_flag,img_sizes)
+        pred_depth_map_logits, depth_pos_embed, denorms,weighted_depth = self.depth_predictor(srcs, masks[2], pos[2],ori_denorms,calibs,random_flip_flag,img_sizes)
         #print(pred_depth_map_logits.shape)([8, 81, 32, 58])  #8,32,58,4   8,32,58
         hs, init_reference, inter_references, inter_references_dim, enc_outputs_class, enc_outputs_coord_unact = self.depthaware_transformer(
             srcs, masks, pos, query_embeds, depth_pos_embed)

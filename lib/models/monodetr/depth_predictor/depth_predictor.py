@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .transformer import TransformerEncoder, TransformerEncoderLayer
-import numpy as np
+import numpy as np 
 
 class DepthPredictor(nn.Module):
 
@@ -117,12 +117,13 @@ class DepthPredictor(nn.Module):
         assert len(feature) == 4
 
         # foreground depth map
-        src_16 = self.proj(feature[1])
-        src_32 = self.upsample(F.interpolate(feature[2], size=src_16.shape[-2:]))
-        src_8 = self.downsample(feature[0])
+        src_16 = self.proj(feature[2])
+        src_32 = self.upsample(F.interpolate(feature[3], size=src_16.shape[-2:]))
+        src_8 = self.downsample(feature[1])
         src = (src_8 + src_16 + src_32) / 3
         #print(src.shape)torch.Size([8, 256, 32, 58]) 
-        src = self.depth_head(src)
+        # 消融实验
+        # src = self.depth_head(src)
         denorms_offset = self.offpre(src) #8,4,32,58
         denorms_offset = denorms_offset.permute(0,2,3,1) #8,4,32,58 --> 8,32,58,4
         ori_denorms = ori_denorms.permute(0,2,1,3) #8,58,32,4 --> 8,32,58,4

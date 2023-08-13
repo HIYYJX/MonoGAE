@@ -186,7 +186,7 @@ class DepthAwareTransformer(nn.Module):
             init_reference_out = reference_points
 
         depth_pos_embed = depth_pos_embed.flatten(2).permute(2, 0, 1)
-        mask_depth = masks[1].flatten(1)
+        mask_depth = masks[2].flatten(1)
 
         # decoder
         hs, inter_references, inter_references_dim = self.decoder(
