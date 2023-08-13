@@ -135,8 +135,8 @@ class KITTI_Dataset(data.Dataset):
         logger.info("==> Loading detections and GTs...")
         img_ids = [int(id) for id in self.idx_list]
         img_ids = sorted(img_ids)
-        dt_annos = kitti.get_label_annos(results_dir,g=False)
-        gt_annos = kitti.get_label_annos(self.label_dir, img_ids,g = True)
+        dt_annos = kitti.get_label_annos(results_dir, g=False)
+        gt_annos = kitti.get_label_annos(self.label_dir, img_ids, g = True)
          
 
         test_id = {'Car': 0, 'Pedestrian':1, 'Cyclist': 2}
