@@ -46,8 +46,8 @@ class KITTI_Dataset(data.Dataset):
         self.res_width = 928
          
         self.use_3d_center = cfg.get('use_3d_center', True)
-        self.writelist = cfg.get('writelist', ['Car']) # 把这个改成Pe  Cyc
-        #self.writelist = ["Car","Pedestrian",'Cyclist']
+        # self.writelist = cfg.get('writelist', ['Car']) # 把这个改成Pe  Cyc
+        self.writelist = ["Car","Pedestrian",'Cyclist']
         # anno: use src annotations as GT, proj: use projected 2d bboxes as GT
         self.bbox2d_type = cfg.get('bbox2d_type', 'anno')
         assert self.bbox2d_type in ['anno', 'proj']

@@ -23,7 +23,7 @@ class DepthPredictor(nn.Module):
         bin_indice = torch.linspace(0, depth_num_bins - 1, depth_num_bins)
         bin_value = (bin_indice + 0.5).pow(2) * bin_size / 2 - bin_size / 8 + depth_min
         bin_value = torch.cat([bin_value, torch.tensor([depth_max])], dim=0)
-        self.depth_bin_values = nn.Parameter(bin_value, requires_grad=False)
+        
 
         # Create modules
         d_model = model_cfg["hidden_dim"]
@@ -45,15 +45,18 @@ class DepthPredictor(nn.Module):
             nn.GroupNorm(32, num_channels=d_model),
             nn.ReLU())
 
-        self.depth_classifier = nn.Conv2d(d_model, depth_num_bins + 1, kernel_size=(1, 1))
+        
         self.offpre = nn.Conv2d(d_model, 4, kernel_size=(1, 1))
         depth_encoder_layer = TransformerEncoderLayer(
             d_model, nhead=8, dim_feedforward=256, dropout=0.1)
 
         self.depth_encoder = TransformerEncoder(depth_encoder_layer, 1)
 
+        '''
+        self.depth_classifier = nn.Conv2d(d_model, depth_num_bins + 1, kernel_size=(1, 1))
         self.depth_pos_embed = nn.Embedding(int(self.depth_max)+1, 256)
-    
+        self.depth_bin_values = nn.Parameter(bin_value, requires_grad=False)
+        '''
     
     def get_GPdepthmap(self, P, denorms,GPdepthmap,flip,imagesize):
         for i in range(int(denorms.shape[0])): # 31
@@ -130,7 +133,8 @@ class DepthPredictor(nn.Module):
         pre_denorms =  denorms_offset  + ori_denorms #8,32,58,4 跟图像一一对应
         #f_denorms = pre_denorms.permute(0,3,1,2)#8,4,32,58
         #Features = torch.cat([src,f_denorms],dim = 1) #8,260,32,58
-        depth_logits = self.depth_classifier(src) # 8 271 32 58
+        # depth_logits = self.depth_classifier(src) # 8 271 32 58
+        depth_logits = None
         #pre_denorms = ori_denorms
         #img_pre_denorms = pre_denorms[:,1:33,2:57,:] # 8,31,55,4
         #print(img_pre_denorms.shape)torch.Size([8, 31, 55, 4])

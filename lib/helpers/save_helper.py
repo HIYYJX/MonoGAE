@@ -1,7 +1,7 @@
 import os
 import torch
 import torch.nn as nn
-
+from collections import OrderedDict
 
 def model_state_to_cpu(model_state):
     model_state_cpu = type(model_state)()  # ordered dict
@@ -28,6 +28,14 @@ def save_checkpoint(state, filename):
     torch.save(state, filename)
 
 
+def check_state_dict(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k[7:] if k.startswith('module') else k        
+        new_state_dict[name] = v
+    return new_state_dict
+
+
 def load_checkpoint(model, optimizer, filename, map_location, logger=None):
     if os.path.isfile(filename):
         logger.info("==> Loading from checkpoint '{}'".format(filename))
@@ -36,7 +44,7 @@ def load_checkpoint(model, optimizer, filename, map_location, logger=None):
         best_result = checkpoint.get('best_result', 0.0)
         best_epoch = checkpoint.get('best_epoch', 0.0)
         if model is not None and checkpoint['model_state'] is not None:
-            model.load_state_dict(checkpoint['model_state'])
+            model.load_state_dict(check_state_dict(checkpoint['model_state']))
         if optimizer is not None and checkpoint['optimizer_state'] is not None:
             optimizer.load_state_dict(checkpoint['optimizer_state'])
         logger.info("==> Done")

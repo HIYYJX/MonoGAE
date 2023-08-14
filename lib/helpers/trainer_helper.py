@@ -17,8 +17,6 @@ class Trainer(object):
                  cfg,
                  model,
                  optimizer,
-                 train_loader,
-                 test_loader,
                  lr_scheduler,
                  warmup_lr_scheduler,
                  logger,
@@ -27,8 +25,6 @@ class Trainer(object):
         self.cfg = cfg
         self.model = model
         self.optimizer = optimizer
-        self.train_loader = train_loader
-        self.test_loader = test_loader
         self.lr_scheduler = lr_scheduler
         self.warmup_lr_scheduler = warmup_lr_scheduler
         self.logger = logger
@@ -40,43 +36,18 @@ class Trainer(object):
         self.model_name = model_name
         self.output_dir = os.path.join('./' + cfg['save_path'], model_name)
         self.tester = None
-     
-
-        # loading pretrain/resume model
-        if cfg.get('pretrain_model'):
-            assert os.path.exists(cfg['pretrain_model'])
-            load_checkpoint(model=self.model,
-                            optimizer=None,
-                            filename=cfg['pretrain_model'],
-                            map_location=self.device,
-                            logger=self.logger)
-
-        if cfg.get('resume_model', None):
-            resume_model_path = os.path.join(self.output_dir, "checkpoint.pth")
-            assert os.path.exists(resume_model_path)
-            self.epoch, self.best_result, self.best_epoch = load_checkpoint(
-                model=self.model.to(self.device),
-                optimizer=self.optimizer,
-                filename=resume_model_path,
-                map_location=self.device,
-                logger=self.logger)
-            self.lr_scheduler.last_epoch = self.epoch - 1
-            self.logger.info("Loading Checkpoint... Best Result:{}, Best Epoch:{}".format(self.best_result, self.best_epoch))
         
-    def train(self):
+    def train(self, train_loader, test_loader, train_sampler, test_sampler, distributed, local_rank):
         start_epoch = self.epoch
-
-        progress_bar = tqdm.tqdm(range(start_epoch, self.cfg['max_epoch']), dynamic_ncols=True, leave=True, desc='epochs')
         best_result = self.best_result
         best_epoch = self.best_epoch
         for epoch in range(start_epoch, self.cfg['max_epoch']):
-            # reset random seed
-            # ref: https://github.com/pytorch/pytorch/issues/5059
             np.random.seed(np.random.get_state()[1][0] + epoch)
-            # train one epoch
-                    
+            if distributed:
+                train_sampler.set_epoch(epoch)
+                test_sampler.set_epoch(epoch)
        
-            self.train_one_epoch(epoch)
+            self.train_one_epoch(epoch, train_loader, local_rank)
             self.epoch += 1
 
             # update learning rate
@@ -86,7 +57,7 @@ class Trainer(object):
                 self.lr_scheduler.step()
 
             # save trained model
-            if (self.epoch % self.cfg['save_frequency']) == 0:
+            if (self.epoch % self.cfg['save_frequency']) == 0 and local_rank == 0:
                 os.makedirs(self.output_dir, exist_ok=True)
                 if self.cfg['save_all']:
                     ckpt_name = os.path.join(self.output_dir, 'checkpoint_epoch_%d' % self.epoch)
@@ -96,6 +67,7 @@ class Trainer(object):
                     get_checkpoint_state(self.model, self.optimizer, self.epoch, best_result, best_epoch),
                     ckpt_name)
 
+                '''
                 if self.tester is not None:
                     self.logger.info("Test Epoch {}".format(self.epoch))
                     self.tester.inference()
@@ -108,10 +80,8 @@ class Trainer(object):
                             get_checkpoint_state(self.model, self.optimizer, self.epoch, best_result, best_epoch),
                             ckpt_name)
                     self.logger.info("Best Result:{}, epoch:{}".format(best_result, best_epoch))
-
-            progress_bar.update()
-
-        self.logger.info("Best Result:{}, epoch:{}".format(best_result, best_epoch))
+                '''
+        # self.logger.info("Best Result:{}, epoch:{}".format(best_result, best_epoch))
 
         return None
     
@@ -134,89 +104,39 @@ class Trainer(object):
         rop = (1 - pts_y + pts_y_low) * rop_t + (1 - pts_y_high + pts_y) * rop_d
         return rop
         
-    def train_one_epoch(self, epoch):
-        torch.set_grad_enabled(True)
-        self.model.train()
-        print(">>>>>>> Epoch:", str(epoch) + ":")
+    def to_local_rank(inputs, local_rank):
+        if isinstance(inputs, list):
+            return [to_local_rank(x, local_rank) for x in inputs]
+        elif isinstance(inputs, dict):
+            return {k: to_local_rank(v, local_rank) for k, v in inputs.items()}
+        else:
+            if isinstance(inputs, int) or isinstance(inputs, float) \
+                    or isinstance(inputs, str):
+                return inputs
+            return inputs.cuda(local_rank, non_blocking=True)
 
-        progress_bar = tqdm.tqdm(total=len(self.train_loader), leave=(self.epoch+1 == self.cfg['max_epoch']), desc='iters')
-        for batch_idx, (inputs, calibs, targets, info,random_flip_flag) in enumerate(self.train_loader):
-            inputs = inputs.to(self.device)
-            calibs = calibs.to(self.device) # 8 3 x 4
+    def train_one_epoch(self, epoch, train_loader, local_rank):
+        torch.set_grad_enabled(True)
+        if local_rank == 0:
+            print(">>>>>>> Epoch:", str(epoch) + ":")
+        progress_bar = tqdm.tqdm(total=len(train_loader), leave=(self.epoch+1 == self.cfg['max_epoch']), desc='iters')
+        for batch_idx, (inputs, calibs, targets, info,random_flip_flag) in enumerate(train_loader):
+            inputs = inputs.cuda(local_rank, non_blocking=True)
+            calibs = calibs.cuda(local_rank, non_blocking=True)
             for key in targets.keys():
-                targets[key] = targets[key].to(self.device)
+                targets[key] = targets[key].cuda(local_rank, non_blocking=True)
             img_sizes = targets['img_size']
-            depthmaps = targets['depthmaps'].to(self.device)  # 8,58,32,1
-            gt_denorms = targets['denorms'].to(self.device) # 8,58,32,4
-            ori_denorms = targets['ori_denorms'].to(self.device) # 8,58,32,4
-            random_flip_flag = random_flip_flag.to(self.device) # 8,1
-            #print(random_flip_flag)
-            
-            '''
-            outputs_coord = targets[ 'boxes_3d']
-         
-            outputs_depth = targets[ 'depth']
-            #print(outputs_coord.shape) torch.Size([1, 50, 6])
-            size = np.array([928,512])
-            size = torch.tensor(size).to(self.device)
-            pad = np.array([28,11])
-            pad =torch.tensor(pad).to(self.device)
-            pad2 = np.array([2,1])
-            pad2 =torch.tensor(pad2).to(self.device)
-            outputs_coord[..., :2] = (outputs_coord[..., :2]*size-pad)/16+pad2
-            batch = outputs_coord.shape[0]
-            depths = []
-            for b in range(batch):
-                weighted_depth = depthmaps[b]  
-                weighted_depth = weighted_depth.squeeze(-1)
-                weighted_depth = weighted_depth.transpose(1,0)
-                #print(weighted_depth.shape) #torch.Size([32,58])
-                coord = outputs_coord[b] 
-                #print(coord[:,:2])
-                #print(coord.shape)#torch.Size( 50, 6])
-                depth_map = self.softget(weighted_depth,coord)
-                depth_map = depth_map.unsqueeze(-1)
-                #print(depth_map)
-                #print(depth_map.shape)torch.Size([50])
-                depths.append(depth_map)
-            depths = torch.stack(depths) 
-            #print(depths.shape) torch.Size([8, 50, 1])
-             
-             
-   
-                
-            #outputs_coord[..., :2] = outputs_coord[..., :2]-pad
-            #outputs_coord[..., :2] = outputs_coord[..., :2]/16
-            #outputs_coord[..., :2] = outputs_coord[..., :2]+pad2
-            mapsize = np.array([58,32])
-            mapsize =torch.tensor(mapsize).to(self.device)
-            #print(outputs_coord[..., :2][1])
-            outputs_coord[..., :2] = outputs_coord[..., :2]/mapsize
-            #print(outputs_coord[..., :2].shape)torch.Size([8, 50, 2])
-            #print(outputs_depth)
-            outputs_center3d = ((outputs_coord[..., :2] - 0.5) * 2).unsqueeze(2).detach()
-            #print(outputs_center3d.shape) torch.Size([1, 50, 1, 2]) 
-        
-            depthmap = depthmaps.squeeze(-1)
-            depthmap = depthmap.transpose(2,1)
-            depth_map = F.grid_sample(
-                depthmap.unsqueeze(1),
-                outputs_center3d,
-                mode='bilinear',
-                align_corners=True).squeeze(1)
-             
-            #print(depth_map.shape)torch.Size([1, 50, 1])
-            #print(depth_map)
-            ''' 
-            
+            depthmaps = targets['depthmaps'].cuda(local_rank, non_blocking=True)
+            gt_denorms = targets['denorms'].cuda(local_rank, non_blocking=True)
+            ori_denorms = targets['ori_denorms'].cuda(local_rank, non_blocking=True)
+            random_flip_flag = random_flip_flag.cuda(local_rank, non_blocking=True)    
             targets = self.prepare_targets(targets, inputs.shape[0])
         
-            # train one batch
+            self.model.train()
+            self.model.zero_grad()
             self.optimizer.zero_grad()
-            #print(inputs.shape)
-            outputs = self.model(inputs, calibs, targets, img_sizes,ori_denorms,random_flip_flag)
-            #print(outputs['pred_logits'].shape)
-            detr_losses_dict = self.detr_loss(outputs, targets,depthmaps,gt_denorms) # depthmaps 8,58,32,1  gt_denorms 8,58,32,4
+            outputs = self.model(inputs, calibs, targets, img_sizes, ori_denorms, random_flip_flag)
+            detr_losses_dict = self.detr_loss(outputs, targets,depthmaps, gt_denorms) # depthmaps 8,58,32,1  gt_denorms 8,58,32,4
 
             weight_dict = self.detr_loss.weight_dict
             detr_losses_dict_weighted = [detr_losses_dict[k] * weight_dict[k] for k in detr_losses_dict.keys() if k in weight_dict]
@@ -232,8 +152,7 @@ class Trainer(object):
             detr_losses_dict_log["loss_detr"] = detr_losses_log
 
             flags = [True] * 5
-            if batch_idx % 30 == 0:
-                print("----", batch_idx, "----")
+            if batch_idx % 30 == 0 and local_rank == 0:
                 print("%s: %.2f, " %("loss_detr", detr_losses_dict_log["loss_detr"]))
                 for key, val in detr_losses_dict_log.items():
                     if key == "loss_detr":
@@ -243,13 +162,12 @@ class Trainer(object):
                             print("")
                             flags[int(key[-1])] = False
                     print("%s: %.2f, " %(key, val), end="")
-                print("")
-                print("")
 
+            torch.distributed.barrier()
             detr_losses.backward()
             self.optimizer.step()
-
             progress_bar.update()
+            torch.cuda.empty_cache()
         progress_bar.close()
 
     def prepare_targets(self, targets, batch_size):
@@ -263,8 +181,6 @@ class Trainer(object):
                 if key in key_list:
                     target_dict[key] = val[bz][mask[bz]]
             targets_list.append(target_dict)
-        #targets_list.append(targets['depthmaps'])  
-        #print(targets['depthmaps'].shape)   torch.Size([8, 58, 32, 1])
             
         return targets_list
 

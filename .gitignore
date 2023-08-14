@@ -3,4 +3,7 @@ lib/models/monodetr/ops/
 runs/monodetr/checkpoint.pth
 runs/monodetr/checkpoint_best.pth
 logs/
+runs/monodetr/checkpoint_epoch_*
+runs/monodetr/train.log.*
 nohup.out
+*.pyc

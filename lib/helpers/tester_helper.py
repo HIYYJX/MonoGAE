@@ -32,7 +32,7 @@ class Tester(object):
                 checkpoint_path = os.path.join(self.output_dir, "checkpoint_epoch_{}.pth".format(self.cfg['checkpoint']))
             else:
                 checkpoint_path = os.path.join(self.output_dir, "checkpoint_best.pth")
-            assert os.path.exists(checkpoint_path)
+            print("checkpoint_path: ", checkpoint_path)
             load_checkpoint(model=self.model,
                             optimizer=None,
                             filename=checkpoint_path,
@@ -48,10 +48,9 @@ class Tester(object):
             checkpoints_list = []
             for _, _, files in os.walk(self.output_dir):
                 for f in files:
-                    if f.endswith(".pth") and int(f[17:-4]) >= start_epoch:
+                    if f.endswith(".pth"):
                         checkpoints_list.append(os.path.join(self.output_dir, f))
-            checkpoints_list.sort(key=os.path.getmtime)
-
+            print(checkpoints_list)
             for checkpoint in checkpoints_list:
                 load_checkpoint(model=self.model,
                                 optimizer=None,

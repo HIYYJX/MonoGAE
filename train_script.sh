@@ -1,0 +1,2 @@
+# CUDA_VISIBLE_DEVICES=0,3,4,6 python -m torch.distributed.launch --nproc_per_node=4 tools/train_val.py --config configs/monodetr.yaml 
+CUDA_VISIBLE_DEVICES=0 python tools/train_val.py --config configs/monodetr.yaml -e

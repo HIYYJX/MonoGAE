@@ -5,7 +5,7 @@ dataset:
   root_dir: 'data/KITTIDataset'
   train_split: 'train'  #   'hom_train' # 
   test_split:  'val'   # 'hom_val' # 
-  batch_size: 8
+  batch_size: 6
   use_3d_center: True
   class_merging: False
   use_dontcare: False
@@ -100,12 +100,12 @@ trainer:
   # resume_model: True
   # pretrain_model: path/to/ckpt
   save_path: './runs/'
-  save_all: False  # False for only savng the best and latest ckpts
+  save_all: True  # False for only savng the best and latest ckpts
 
 
 tester:
   type: *dataset_type
-  mode: single  # 'single' or 'all'; 'all' to evaluate all ckpts in the folder
+  mode: all  # 'single' or 'all'; 'all' to evaluate all ckpts in the folder
   checkpoint: 195  # the start ckpt epoch for 'all'
   threshold: 0.2  # confidence filter
   topk: 50
