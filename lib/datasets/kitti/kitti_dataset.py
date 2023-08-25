@@ -63,13 +63,13 @@ class KITTI_Dataset(data.Dataset):
             self.writelist.extend(['DontCare'])
 
         # data split loading
-        assert self.split in ['train', 'val', 'trainval', 'test','hom_train','hom_val'] # 'train', 'val'
+        assert self.split in ['train', 'val', 'trainval', 'test','hom_train','hom_val','hom_train_half','hom_train_half'] # 'train', 'val'
         self.split_file = os.path.join(self.root_dir, 'ImageSets', self.split + '.txt') # 有
         self.idx_list = [x.strip() for x in open(self.split_file).readlines()]
-        #if self.split == 'train':
-            #self.idx_list =self.idx_list [:5000]
-        #else:
-            #self.idx_list =self.idx_list [:2000]
+        if self.split == 'train':
+            self.idx_list =self.idx_list [:500]
+        else:
+            self.idx_list =self.idx_list [:200]
         #self.idx_list =self.idx_list [:5000]
     
 
