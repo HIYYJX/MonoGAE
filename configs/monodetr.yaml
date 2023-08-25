@@ -3,8 +3,8 @@ random_seed: 444
 dataset:
   type: &dataset_type 'KITTI'
   root_dir: 'data/KITTIDataset'
-  train_split: 'train'  #   'hom_train' # 
-  test_split:  'val'   # 'hom_val' # 
+  train_split: 'hom_train_half'  #   'hom_train' # 
+  test_split:  'hom_val_half'   # 'hom_val' # 
   batch_size: 8
   use_3d_center: True
   class_merging: False
@@ -90,11 +90,11 @@ lr_scheduler:
   type: 'step'  # 'step' or 'cos'
   warmup: False  # 5 epoches, cosine warmup, init_lir=0.00001 in default
   decay_rate: 0.1
-  decay_list: [125, 165]
+  decay_list: [30]
 
 
 trainer:
-  max_epoch: 1 #195
+  max_epoch: 90
   gpu_ids: '0' 
   save_frequency: 1  # checkpoint save interval (in epoch)
   # resume_model: True
