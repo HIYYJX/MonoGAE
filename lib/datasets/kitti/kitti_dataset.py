@@ -33,8 +33,10 @@ class KITTI_Dataset(data.Dataset):
         self.split = split#   'train' #  
         self.num_classes = 3
         self.max_objs = 50
-        self.class_name = ['Pedestrian', 'Car', 'Cyclist']
-        self.cls2id = {'Pedestrian': 0, 'Car': 1, 'Cyclist': 2}
+        # self.class_name = ['Pedestrian', 'Car', 'Cyclist']
+        self.class_name = ['Bus', 'Car']
+        # self.cls2id = {'Pedestrian': 0, 'Car': 1, 'Cyclist': 2}
+        self.cls2id = {'Bus': 0, 'Car': 1}
         #self.resolution = np.array([1280, 384])  # W * H
         self.resolution = np.array([928, 512],dtype = int)
         self.inputsize = np.array([1920//2.2,1080//2.2],dtype = int) #872,490
@@ -139,14 +141,15 @@ class KITTI_Dataset(data.Dataset):
         gt_annos = kitti.get_label_annos(self.label_dir, img_ids,g = True)
          
 
-        test_id = {'Car': 0, 'Pedestrian':1, 'Cyclist': 2}
+        # test_id = {'Car': 0, 'Pedestrian':1, 'Cyclist': 2}
+        test_id = {'Car': 0, 'Bus':1}
 
         logger.info('==> Evaluating (official) ...')
-        car_moderate = 0
+        bus_moderate = 0
         for category in self.writelist:
             results_str, results_dict, mAP3d_R40 = get_official_eval_result(gt_annos, dt_annos, test_id[category])
-            if category == 'Car':
-                car_moderate = mAP3d_R40
+            if category == 'Bus':
+                bus_moderate = mAP3d_R40
             logger.info(results_str)
             #if category == 'Pedestrian':
                 #Pedestrian_moderate = mAP3d_R40
@@ -154,7 +157,7 @@ class KITTI_Dataset(data.Dataset):
             #if category == 'Cyclist':
                 #Cyclist_moderate = mAP3d_R40
             #logger.info(results_str)
-        return car_moderate
+        return bus_moderate
 
     def __len__(self):
         return self.idx_list.__len__()

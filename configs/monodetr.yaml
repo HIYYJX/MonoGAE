@@ -11,7 +11,7 @@ dataset:
   use_dontcare: False
   bbox2d_type: 'anno'  # 'proj' or 'anno'
   meanshape: False  # use predefined anchor or not
-  writelist: ['Car']
+  writelist: ['Car',"Bus"]
   clip_2d: False
 
   aug_pd: True
