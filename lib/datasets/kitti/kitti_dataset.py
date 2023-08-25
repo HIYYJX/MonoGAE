@@ -61,7 +61,7 @@ class KITTI_Dataset(data.Dataset):
             self.writelist.extend(['DontCare'])
 
         # data split loading
-        assert self.split in ['train', 'val', 'trainval', 'test','hom_train','hom_val'] # 'train', 'val'
+        assert self.split in ['train', 'val', 'trainval', 'test','hom_train','hom_val','hom_train_half','hom_val_half'] # 'train', 'val'
         self.split_file = os.path.join(self.root_dir, 'ImageSets', self.split + '.txt') # 有
         self.idx_list = [x.strip() for x in open(self.split_file).readlines()]
         #if self.split == 'train':
@@ -106,7 +106,7 @@ class KITTI_Dataset(data.Dataset):
         self.clip_2d = cfg.get('clip_2d', False)
 
     def get_image(self, idx):
-        img_file = os.path.join(self.image_dir, '%06d.jpg' % idx) #'%06d.jpg' png
+        img_file = os.path.join(self.image_dir, '%06d.png' % idx) #'%06d.jpg' png
         #print(img_file)
         assert os.path.exists(img_file)
         return Image.open(img_file)    # (H, W, 3) RGB mode
