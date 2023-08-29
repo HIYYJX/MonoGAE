@@ -314,15 +314,16 @@ def get_label_anno(label_path,g):
     #for x in content:
         #if  int(float(x[13]))<40:
             #con.append(x)
+    ''' 
     if g:
         for x in content:
-            #if  int(float(x[8]))<1:
-                #x[8]=float(1.30)
+            if  int(float(x[8]))<1:
+                x[8]=float(1.30)
             con.append(x)
     else:
         con = content
     content = con
-    ''' 
+ 
     annotations['name'] = np.array([x[0] for x in content])
     annotations['truncated'] = np.array([float(x[1]) for x in content])
     annotations['occluded'] = np.array([int(x[2]) for x in content])

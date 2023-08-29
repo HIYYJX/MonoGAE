@@ -20,8 +20,8 @@ class Object3d(object):
         self.alpha = float(label[3])
         self.box2d = np.array((float(label[4]), float(label[5]), float(label[6]), float(label[7])), dtype=np.float32)
         self.h = float(label[8])
-        #if  int(self.h)<1:
-            #self.h = float(1.3)
+        if  int(self.h)<1:
+            self.h = float(1.3)
         self.w = float(label[9])
         self.l = float(label[10])
         self.pos = np.array((float(label[11]), float(label[12]), float(label[13])), dtype=np.float32)
